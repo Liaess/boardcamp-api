@@ -237,18 +237,7 @@ server.get('/rentals', async (req,res)=>{
     const { costumerId } = req.params;
     const { gameId } = req.params;
     try{
-        if(!costumerId){
-            const result = await connection.query(`
-            SELECT rentals.*, 
-            jsonb_build_object('name', customers.name, 'id', customers.id) AS customer,
-            jsonb_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', categories.name) AS game            
-            FROM rentals 
-            JOIN customers ON rentals."customerId" = customers.id
-            JOIN games ON rentals."gameId" = games.id
-            JOIN categories ON categories.id = games."categoryId"
-            `);
-            res.send(result.rows);
-        } else {
+        if(costumerId){
             const result = await connection.query(`
             SELECT rentals.*, 
             jsonb_build_object('name', customers.name, 'id', customers.id) AS customer,
@@ -260,8 +249,7 @@ server.get('/rentals', async (req,res)=>{
             WHERE customers.id = $1
             `, [costumerId]);
             res.send(result.rows);
-        }
-        if(!gameId){
+        } else if(gameId){
             const result = await connection.query(`
             SELECT rentals.*, 
             jsonb_build_object('name', customers.name, 'id', customers.id) AS customer,
@@ -270,7 +258,8 @@ server.get('/rentals', async (req,res)=>{
             JOIN customers ON rentals."customerId" = customers.id
             JOIN games ON rentals."gameId" = games.id
             JOIN categories ON categories.id = games."categoryId"
-            `);
+            WHERE games.id = $1
+            `[gameId]);
             res.send(result.rows);
         } else {
             const result = await connection.query(`
@@ -281,8 +270,7 @@ server.get('/rentals', async (req,res)=>{
             JOIN customers ON rentals."customerId" = customers.id
             JOIN games ON rentals."gameId" = games.id
             JOIN categories ON categories.id = games."categoryId"
-            WHERE game.id = $1
-            `, [gameId]);
+            `);
             res.send(result.rows);
         }
     } catch (e){
